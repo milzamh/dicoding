@@ -3,11 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-uploaded_file = st.file_uploader("hour.csv", type="csv")
-
-if uploaded_file is not None:
-    hour_df = pd.read_csv(uploaded_file)
-
 def get_total_rentals_by_date(df, selected_date):
     filtered_data = df[df['dteday'] == pd.to_datetime(selected_date)]
     total_rentals = filtered_data['cnt'].sum()
