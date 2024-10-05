@@ -48,7 +48,7 @@ def plot_monthly_user_type_trend(df):
 
 def plot_rentals_by_temperature(df):
     grouped_temp = df.groupby('actual_temp')['cnt'].sum().reset_index()
-    fig, ax = plt.subplots(figsize=(10, 8))
+    fig, ax = plt.subplots(figsize=(10, 6))
     ax.pie(grouped_temp['cnt'], labels=grouped_temp['actual_temp'], autopct='%1.1f%%', explode=(0, 0.1, 0.2))
     ax.set_title('Distribusi Penyewaan Sepeda Berdasarkan Kategori Suhu')
     return fig
@@ -72,6 +72,21 @@ def plot_workingday_holiday_rentals(df):
     ax.set_xlabel('Kategori Hari')
     ax.set_ylabel('Total Penyewaan')
     return fig
+
+def plot_workday_temp_rentals(df):
+    workdays = df[df['workingday'] == 1]
+    
+    grouped = workdays.groupby(['actual_temp', 'weathersit'])['cnt'].sum().reset_index()
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    bar = sns.barplot(data=grouped, x='actual_temp', y='cnt', hue='weathersit', palette='viridis', ax=ax)
+    
+    bar.bar_label(bar.containers[0])
+    
+    ax.set_title('Hubungan Suhu dan Penyewaan Sepeda pada Hari Kerja')
+    ax.set_xlabel('Suhu (°C)')
+    ax.set_ylabel('Jumlah Penyewaan (Dalam Juta)')
+    ax.legend(title='Kondisi Cuaca')
 
 def main():
     st.title("Dashboard Analisis Bike Sharing Dataset")
@@ -142,18 +157,30 @@ def main():
     
     st.markdown("Grafik diatas menunjukkan bahwa pengguna terdaftar lebih banyak menyewa sepeda dibandingkan pengguna kasual. Namun, tren penyewaan sepeda oleh pengguna kasual mengalami peningkatan yang lebih signifikan dibandingkan pengguna terdaftar.")
 
-    st.subheader("Distribusi Penyewaan Sepeda Berdasarkan Kategori Suhu")
-    fig_temp = plot_rentals_by_temperature(hour_df)
-    st.pyplot(fig_temp)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Suhu favorit untuk penyewaan sepeda")
+        fig_temp = plot_rentals_by_temperature(hour_df)
+        st.pyplot(fig_temp)
     
-    st.subheader("Total Penyewaan Sepeda per Kondisi Cuaca")
-    fig_weather = plot_weather_condition(hour_df)
-    st.pyplot(fig_weather)
+    with col2:
+        st.subheader("Total Penyewaan Sepeda per Kondisi Cuaca")
+        fig_weather = plot_weather_condition(hour_df)
+        st.pyplot(fig_weather)
+    
+    st.markdown("Visualisasi di atas merupakan distribusi penyewaan sepeda berdasarkan kategori suhu dan kondisi cuaca. Dapat dilihat bahwa suhu 'mild' dan kondisi cuaca 'Clear' merupakan faktor yang paling berpengaruh terhadap jumlah penyewaan sepeda.")
     
     st.subheader("Perbandingan Penyewaan Sepeda: Hari Kerja vs Hari Libur")
     fig_workingday_holiday = plot_workingday_holiday_rentals(hour_df)
     st.pyplot(fig_workingday_holiday)
+    st.markdown("Pada grafik di atas, penyewaan sepeda pada hari kerja lebih tinggi dibandingkan hari libur. Ini kemungkinan terjadi karena mayoritas pengguna merupakan pekerja yang membutuhkan transportasi pada saat hari kerja")
+    
+    st.subheader("Hubungan Suhu dan Cuaca pada Penyewaan Sepeda pada Hari Kerja")
+    fig_workday_temp = plot_workday_temp_rentals(hour_df)
+    st.pyplot(fig_workday_temp)    
+    st.markdown("Grafik di atas merupakan gabungan dari visualisasi suhu dan kondisi cuaca terhadap jumlah penyewaan sepeda pada hari kerja. Dapat dilihat bahwa suhu 'mild' dengan kondisi cuaca 'Clear' menjadi kombinasi favorit bagi pengguna untuk menyewa sepeda.")
 
+    st.set_option('deprecation.showPyplotGlobalUse', False)
 
 if __name__ == '__main__':
     main()
