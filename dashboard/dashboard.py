@@ -2,6 +2,15 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
+
+def load_data():
+    try:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(script_dir, 'hour.csv')
+        return pd.read_csv(csv_path)
+    except FileNotFoundError:
+        st.stop()
 
 def get_total_rentals_by_date(df, selected_date):
     filtered_data = df[df['dteday'] == pd.to_datetime(selected_date)]
@@ -92,7 +101,7 @@ def main():
     st.title("Dashboard Analisis Bike Sharing Dataset")
 
 
-    hour_df = pd.read_csv('hour.csv')
+    hour_df = load_data()
     hour_df['dteday'] = pd.to_datetime(hour_df['dteday']) 
     
     selected_date = st.date_input("Pilih Tanggal:", value=pd.to_datetime("2011-01-01"), 
