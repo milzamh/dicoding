@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
+st.set_option('deprecation.showPyplotGlobalUse', False)
 def load_data():
     try:
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -68,6 +69,7 @@ def plot_weather_condition(df):
     sns.barplot(data=grouped_weather, x='weathersit', y='cnt', ax=ax)
     ax.set_title('Total Penyewaan Sepeda per Kondisi Cuaca')
     ax.set_xlabel('Kondisi Cuaca')
+    ax.set_xticklabels(['Clear', 'Mist', 'Light Rain/Snow', 'Heavy Rain/Snow'])
     ax.set_ylabel('Total Penyewaan (Dalam Juta)')
     return fig
 
@@ -92,10 +94,20 @@ def plot_workday_temp_rentals(df):
     
     bar.bar_label(bar.containers[0])
     
-    ax.set_title('Hubungan Suhu dan Penyewaan Sepeda pada Hari Kerja')
+    ax.set_title('Jumlah Penyewaan Sepeda berdasarkan Suhu dan Cuaca pada Hari Kerja')
     ax.set_xlabel('Suhu (°C)')
     ax.set_ylabel('Jumlah Penyewaan (Dalam Juta)')
     ax.legend(title='Kondisi Cuaca')
+
+def display_correlation_heatmap(df):
+    workdays = df[df['workingday'] == 1]
+    selected_columns = workdays[['cnt', 'temp', 'weathersit']]
+    correlation_matrix = selected_columns.corr()
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm')
+    ax.set_title('Korelasi Suhu dan Cuaca pada Jumlah Penyewaan Sepeda di Hari Kerja')
+    return fig
 
 def main():
     st.title("Dashboard Analisis Bike Sharing Dataset")
@@ -109,9 +121,6 @@ def main():
     
     hour_df['actual_temp'] = hour_df['temp'] * 41 
     hour_df['actual_temp'] = hour_df['actual_temp'].apply(lambda x: 'cold' if x < 15 else 'mild' if 15 <= x < 30 else 'hot')
-
-    hour_df['weathersit'] = hour_df['weathersit'].replace({1: 'Clear', 2: 'Mist', 3: 'Light Rain/Snow', 4: 'Heavy Rain/Snow'})
-    hour_df['weathersit'].value_counts()
 
     total_rentals, filtered_data = get_total_rentals_by_date(hour_df, selected_date)
     st.write(f"**Total penyewaan sepeda pada {selected_date.strftime('%Y-%m-%d')}: {total_rentals} sepeda.**")
@@ -184,11 +193,17 @@ def main():
     st.pyplot(fig_workingday_holiday)
     st.markdown("Pada grafik di atas, penyewaan sepeda pada hari kerja lebih tinggi dibandingkan hari libur. Ini kemungkinan terjadi karena mayoritas pengguna merupakan pekerja yang membutuhkan transportasi pada saat hari kerja")
     
-    st.subheader("Hubungan Suhu dan Cuaca pada Penyewaan Sepeda pada Hari Kerja")
+    st.subheader("Jumlah Penyewaan Sepeda berdasarkan Suhu dan Cuaca pada Hari Kerja")
     fig_workday_temp = plot_workday_temp_rentals(hour_df)
     st.pyplot(fig_workday_temp)    
     st.markdown("Grafik di atas merupakan gabungan dari visualisasi suhu dan kondisi cuaca terhadap jumlah penyewaan sepeda pada hari kerja. Dapat dilihat bahwa suhu 'mild' dengan kondisi cuaca 'Clear' menjadi kombinasi favorit bagi pengguna untuk menyewa sepeda.")
 
+    st.subheader("Korelasi Suhu dan Cuaca pada Jumlah Penyewaan Sepeda di Hari Kerja")
+    fig_corr = display_correlation_heatmap(hour_df)
+    st.pyplot(fig_corr)
+    st.markdown("Suhu memiliki korelasi yang positif lemah (0.35) terhadap jumlah penyewaan sepeda. Hal ini membuktikan bahwa suhu tidak memiliki pengaruh yang kuat terhadap jumlah penyewaan sepeda. Sedangkan cuaca memiliki korelasi yang negatif lemah (-0.14) terhadap jumlah penyewaan sepeda. Pengaruh cuaca terhadap jumlah penyewaan sepeda sangatlah minim.")
+    
+    st.set_option('deprecation.showPyplotGlobalUse', False)
     st.set_option('deprecation.showPyplotGlobalUse', False)
 
 if __name__ == '__main__':
